@@ -1,11 +1,16 @@
 use bs58;
 use serde::{Deserialize, Serialize};
+use solana_client::rpc_client::RpcClient;
 use solana_sdk::{
     pubkey::Pubkey,
     signature::{Keypair, Signer},
 };
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
+
+const RPC_URL: &str = "https://api.devnet.solana.com";
+
+// public address of new wallet: J939BZY2XykKTTvNQYBxBLZperPSBrWuqM2WzMca9hwz
 
 #[cfg(test)]
 mod tests {
@@ -36,15 +41,30 @@ mod tests {
 
     #[test]
     fn wallet_to_base58() {
-        let wallet = read_wallet_from_file("./dev-wallet.json");
+        let wallet = read_wallet_from_file("dev-wallet.json").expect("Couldn't find wallet file");
         println!("Your private key is:");
         let base58 = bs58::encode(wallet.0).into_string();
         println!("{:?}", base58);
     }
 
     #[test]
-    fn airdrop() {
-        // Add airdrop test implementation here
+    fn airdrop() -> Result<(), Box<dyn std::error::Error>> {
+        let wallet = read_wallet_from_file("dev-wallet.json")?;
+        let keypair = Keypair::from_bytes(&wallet.0)?;
+        let client = RpcClient::new(RPC_URL);
+
+        match client.request_airdrop(&keypair.pubkey(), 2_000_000_000u64) {
+            Ok(s) => {
+                println!("Success! Check out your TX here:");
+                println!(
+                    "https://explorer.solana.com/tx/{}?cluster=devnet",
+                    s.to_string()
+                );
+            }
+            Err(e) => println!("Oops, something went wrong: {}", e.to_string()),
+        };
+
+        Ok(())
     }
 
     #[test]
@@ -55,11 +75,11 @@ mod tests {
     #[derive(Serialize, Deserialize, Debug)]
     struct Wallet(Vec<u8>);
 
-    fn read_wallet_from_file(file_path: &str) -> Wallet {
-        let file = File::open(file_path).expect("Unable to open file");
+    fn read_wallet_from_file(file_path: &str) -> Result<Wallet, Box<dyn std::error::Error>> {
+        let file = File::open(file_path)?;
         let reader = BufReader::new(file);
-        let wallet: Wallet = serde_json::from_reader(reader).expect("Unable to parse JSON");
-        wallet
+        let wallet: Wallet = serde_json::from_reader(reader)?;
+        Ok(wallet)
     }
 
     fn read_base58_from_file(file_path: &str) -> String {
