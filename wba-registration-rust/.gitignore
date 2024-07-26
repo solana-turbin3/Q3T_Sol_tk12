@@ -1,0 +1,4 @@
+target
+*wallet.json
+dev-wallet-base58.json
+test-ledger/
