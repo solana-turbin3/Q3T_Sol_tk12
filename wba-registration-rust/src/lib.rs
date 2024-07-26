@@ -4,7 +4,7 @@ mod programs;
 
 #[cfg(test)]
 mod tests {
-
+    // importing outside of the tests mod gives warnings for unused variables outside of the scope
     use bs58;
     use serde::{Deserialize, Serialize};
     use solana_client::rpc_client::RpcClient;
@@ -160,7 +160,7 @@ mod tests {
     #[test]
     fn enroll() -> Result<(), Box<dyn std::error::Error>> {
         let rpc_client = RpcClient::new(RPC_URL);
-
+        // get my private key for my wba wallet
         let signer = read_keypair_file("wba-wallet.json")?;
 
         let prereq = WbaPrereqProgram::derive_program_address(&[
@@ -197,7 +197,7 @@ mod tests {
 
     #[derive(Serialize, Deserialize, Debug)]
     struct Wallet(Vec<u8>);
-
+    // I didn't properly use the solana's way to read a file so had chat create the following 2 functions to read contents from files
     fn read_wallet_from_file(file_path: &str) -> Result<Wallet, Box<dyn std::error::Error>> {
         let file = File::open(file_path)?;
         let reader = BufReader::new(file);
