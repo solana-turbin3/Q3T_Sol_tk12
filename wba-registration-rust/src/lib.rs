@@ -1,14 +1,16 @@
 // public address of new wallet: J939BZY2XykKTTvNQYBxBLZperPSBrWuqM2WzMca9hwz
 
+mod programs;
+
 #[cfg(test)]
 mod tests {
 
     use bs58;
     use serde::{Deserialize, Serialize};
     use solana_client::rpc_client::RpcClient;
-    use solana_program::{pubkey::Pubkey, system_instruction::transfer};
+    use solana_program::{pubkey::Pubkey, system_instruction::transfer, system_program};
     use solana_sdk::{
-        signature::{Keypair, Signer},
+        signature::{read_keypair_file, Keypair, Signer},
         transaction::Transaction,
     };
     use std::fs::File;
@@ -16,6 +18,8 @@ mod tests {
     use std::str::FromStr;
 
     use solana_sdk::message::Message;
+
+    use crate::programs::wba_prereq::{CompleteArgs, WbaPrereqProgram};
 
     const RPC_URL: &str = "https://api.devnet.solana.com";
     const LAMPORTS_PER_SOL: u64 = 1_000_000_000;
@@ -151,6 +155,44 @@ mod tests {
         );
 
         Ok(())
+    }
+
+    #[test]
+    fn enroll() -> Result<(), Box<dyn std::error::Error>> {
+        let rpc_client = RpcClient::new(RPC_URL);
+
+        let signer = read_keypair_file("wba-wallet.json")?;
+
+        let prereq = WbaPrereqProgram::derive_program_address(&[
+            b"prereq",
+            signer.pubkey().to_bytes().as_ref(),
+        ]);
+        let args = CompleteArgs {
+            github: b"timknapp12".to_vec(),
+        };
+        let blockhash = rpc_client
+            .get_latest_blockhash()
+            .expect("Failed to get recent blockhash");
+
+        let transaction = WbaPrereqProgram::complete(
+            &[&signer.pubkey(), &prereq, &system_program::id()],
+            &args,
+            Some(&signer.pubkey()),
+            &[&signer],
+            blockhash,
+        );
+
+        let signature = rpc_client
+            .send_and_confirm_transaction(&transaction)
+            .expect("Failed to send transaction");
+
+        println!(
+            "Success! Check out your TX here: https://explorer.solana.com/tx/{}/?cluster=devnet",
+            signature
+        );
+
+        Ok(())
+        // success: https://explorer.solana.com/tx/4yYTQsBHKoJwp9RrxnHUcJEmvcTsHShCuBnjDADWwckqeLeBQAPsVqV96JfEZPh42hqHiZxLiqQMWKbuuUGHX3gW?cluster=devnet
     }
 
     #[derive(Serialize, Deserialize, Debug)]
