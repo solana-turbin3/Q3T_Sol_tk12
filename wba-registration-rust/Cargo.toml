@@ -10,3 +10,5 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 solana-client = "1.15.2"
 solana-program = "1.15.2"
+borsh = "0.10.3"
+solana-idlgen = { git = "https://github.com/deanmlittle/solana-idlgen.git" }
