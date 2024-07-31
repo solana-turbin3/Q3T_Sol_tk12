@@ -9,7 +9,7 @@ const keypair = Keypair.fromSecretKey(new Uint8Array(wallet));
 const commitment: Commitment = 'confirmed';
 const connection = new Connection('https://api.devnet.solana.com', commitment);
 
-const token_decimals = 1_000_000;
+const token_decimals = 1_000_000n;
 
 // Mint address
 const mintAddress = new PublicKey(
@@ -35,7 +35,7 @@ const mintAddress = new PublicKey(
       mintAddress,
       ata.address,
       keypair,
-      1000 * token_decimals
+      1000n * token_decimals
     );
     console.log(
       `Success! Check out your tx here: https://explorer.solana.com/tx/${mintTx}?cluster=devnet`
