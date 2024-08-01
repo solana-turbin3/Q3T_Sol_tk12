@@ -1,26 +1,48 @@
-import { createUmi } from "@metaplex-foundation/umi-bundle-defaults"
-import { createSignerFromKeypair, signerIdentity, generateSigner, percentAmount } from "@metaplex-foundation/umi"
-import { createNft, mplTokenMetadata } from "@metaplex-foundation/mpl-token-metadata";
+import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
+import {
+  createSignerFromKeypair,
+  signerIdentity,
+  generateSigner,
+  percentAmount,
+} from '@metaplex-foundation/umi';
+import {
+  //   burnNft,
+  createNft,
+  mplTokenMetadata,
+} from '@metaplex-foundation/mpl-token-metadata';
 
-import wallet from "../wba-wallet.json"
-import base58 from "bs58";
+import wallet from '../wba-wallet.json';
+import base58 from 'bs58';
 
-const RPC_ENDPOINT = "https://api.devnet.solana.com";
+const RPC_ENDPOINT = 'https://api.devnet.solana.com';
 const umi = createUmi(RPC_ENDPOINT);
 
 let keypair = umi.eddsa.createKeypairFromSecretKey(new Uint8Array(wallet));
 const myKeypairSigner = createSignerFromKeypair(umi, keypair);
 umi.use(signerIdentity(myKeypairSigner));
-umi.use(mplTokenMetadata())
+umi.use(mplTokenMetadata());
 
 const mint = generateSigner(umi);
 
-(async () => {
-    // let tx = ???
-    // let result = await tx.sendAndConfirm(umi);
-    // const signature = base58.encode(result.signature);
-    
-    // console.log(`Succesfully Minted! Check out your TX here:\nhttps://explorer.solana.com/tx/${signature}?cluster=devnet`)
+// this is the uri generated the script in nft_metadata
+const uri = 'https://arweave.net/VLsoauFPxOhOKFWo1dgRiplUBGEUV-9_hve4SRB1HEA';
 
-    console.log("Mint Address: ", mint.publicKey);
+(async () => {
+  let tx = createNft(umi, {
+    mint,
+    name: 'WBARug3',
+    uri,
+    sellerFeeBasisPoints: percentAmount(5, 2), // 5% fee
+  });
+  let result = await tx.sendAndConfirm(umi);
+  const signature = base58.encode(result.signature);
+
+  console.log(
+    `Successfully Minted! Check out your TX here:\nhttps://explorer.solana.com/tx/${signature}?cluster=devnet`
+  );
+
+  console.log(
+    'check out the nft here: ',
+    `https://explorer.solana.com/address/${mint.publicKey}?cluster=devnet`
+  );
 })();
