@@ -1,7 +1,6 @@
 import wallet from '../wba-wallet.json';
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import {
-  createGenericFile,
   createSignerFromKeypair,
   signerIdentity,
 } from '@metaplex-foundation/umi';
@@ -18,30 +17,36 @@ umi.use(signerIdentity(signer));
 
 (async () => {
   try {
-    // Follow this JSON structure
-    // https://docs.metaplex.com/programs/token-metadata/changelog/v1.0#json-structure
-
-    const image =
+    const generugImage =
       'https://arweave.net/DW-3_1ABpidIv39QkTJbo9DFl5E2P9hrtIwX4Q07pys';
+    const generug2Image =
+      'https://arweave.net/W3gogC1dAqi6YqYYdQFuRGZe2v2S1IMIPztuk91Udlc';
+
+    const image = generug2Image;
+
     const metadata = {
-      name: 'WBA - Tim',
-      symbol: 'TK12R',
-      description: 'Rugging NFT',
+      name: 'WBA_Rug2',
+      symbol: 'RUG',
+      description: 'Rug NFT',
       image,
       attributes: [{ trait_type: 'Rarity', value: 'Unique' }],
       properties: {
         files: [
           {
-            type: 'image/png',
             uri: image,
+            type: 'image/png',
           },
         ],
+        category: 'image',
       },
-      creators: [],
     };
-    const myUri = image; // This is your image URI
-    console.log('Your image URI: ', myUri);
-    // https://arweave.net/DW-3_1ABpidIv39QkTJbo9DFl5E2P9hrtIwX4Q07pys
+
+    const metadataUri = await umi.uploader.uploadJson(metadata).catch((err) => {
+      throw new Error(err);
+    });
+
+    console.log('Your metadata URI: ', metadataUri);
+    // rug2 = https://arweave.net/VLsoauFPxOhOKFWo1dgRiplUBGEUV-9_hve4SRB1HEA
   } catch (error) {
     console.log('Oops.. Something went wrong', error);
   }

@@ -6,6 +6,7 @@ import {
   percentAmount,
 } from '@metaplex-foundation/umi';
 import {
+  //   burnNft,
   createNft,
   mplTokenMetadata,
 } from '@metaplex-foundation/mpl-token-metadata';
@@ -23,12 +24,13 @@ umi.use(mplTokenMetadata());
 
 const mint = generateSigner(umi);
 
-const uri = 'https://arweave.net/DW-3_1ABpidIv39QkTJbo9DFl5E2P9hrtIwX4Q07pys';
+// this is the uri generated the script in nft_metadata
+const uri = 'https://arweave.net/VLsoauFPxOhOKFWo1dgRiplUBGEUV-9_hve4SRB1HEA';
 
 (async () => {
   let tx = createNft(umi, {
     mint,
-    name: 'WBA - Tim',
+    name: 'WBARug3',
     uri,
     sellerFeeBasisPoints: percentAmount(5, 2), // 5% fee
   });
@@ -39,5 +41,8 @@ const uri = 'https://arweave.net/DW-3_1ABpidIv39QkTJbo9DFl5E2P9hrtIwX4Q07pys';
     `Successfully Minted! Check out your TX here:\nhttps://explorer.solana.com/tx/${signature}?cluster=devnet`
   );
 
-  console.log('Mint Address: ', mint.publicKey);
+  console.log(
+    'check out the nft here: ',
+    `https://explorer.solana.com/address/${mint.publicKey}?cluster=devnet`
+  );
 })();
