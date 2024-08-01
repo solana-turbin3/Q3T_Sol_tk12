@@ -5,7 +5,7 @@ import { getOrCreateAssociatedTokenAccount, transfer } from '@solana/spl-token';
 // We're going to import our keypair from the wallet file
 const fromKeypair = Keypair.fromSecretKey(new Uint8Array(wallet));
 const toKeypair = Keypair.generate();
-console.log('toKeypair.publicKey', toKeypair.publicKey.toBase58()); // CcNe4jbdkqGJ9axynDZ2ymdh6ua3r1XTyP1B2ZgnKZj8
+console.log('toKeypair.publicKey', toKeypair.publicKey.toBase58());
 
 //Create a Solana devnet connection
 const commitment: Commitment = 'confirmed';
@@ -49,7 +49,6 @@ const mintAddress = new PublicKey(
     console.log(
       `Successful tx at: https://explorer.solana.com/tx/${txSignature}?cluster=devnet`
     );
-    // https://explorer.solana.com/tx/zf1EQkkzkGky2uvAvmcN49JZSzjr9VgM1CLySmXpJtemoQtVQAZZZN4Nk9qfAd18MUkmTxz5xU8rYddV6BaRDXx?cluster=devnet
   } catch (e) {
     console.error(`Oops, something went wrong: ${e}`);
   }

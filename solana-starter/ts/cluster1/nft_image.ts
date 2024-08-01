@@ -33,8 +33,6 @@ umi.use(signerIdentity(signer));
       throw new Error(err);
     });
     console.log('Your image URI: ', imageUri[0]);
-    // generug https://arweave.net/DW-3_1ABpidIv39QkTJbo9DFl5E2P9hrtIwX4Q07pys
-    // generug2: https://arweave.net/W3gogC1dAqi6YqYYdQFuRGZe2v2S1IMIPztuk91Udlc
   } catch (error) {
     console.log('Oops.. Something went wrong', error);
   }

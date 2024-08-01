@@ -26,7 +26,6 @@ const mintAddress = new PublicKey(
       keypair.publicKey
     );
     console.log(`Your ata is: ${ata.address.toBase58()}`);
-    // 9bs51cnNE9t9HFirzaDi6AS5aCrpWVxXaDHVoD131SBf
 
     // Mint to ATA
     const mintTx = await mintTo(
@@ -40,8 +39,6 @@ const mintAddress = new PublicKey(
     console.log(
       `Success! Check out your tx here: https://explorer.solana.com/tx/${mintTx}?cluster=devnet`
     );
-    // mintTx = '5fnJEwaABLrt37PmGzy5KqRsoED3YUjbejR3WjYrN3pXHX2irKBbRLz4UKBKo9UxHEJ4Smfc8jvunq6hkoVdEeA4'
-    // https://explorer.solana.com/tx/5fnJEwaABLrt37PmGzy5KqRsoED3YUjbejR3WjYrN3pXHX2irKBbRLz4UKBKo9UxHEJ4Smfc8jvunq6hkoVdEeA4?cluster=devnet
   } catch (error) {
     console.log(`Oops, something went wrong: ${error}`);
   }

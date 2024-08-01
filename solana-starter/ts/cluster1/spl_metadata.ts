@@ -50,7 +50,7 @@ umi.use(signerIdentity(createSignerFromKeypair(umi, keypair)));
     let result = await tx.sendAndConfirm(umi);
     console.log(
       `here is the result for the metadata tx: ${bs58.encode(result.signature)}`
-    ); // 3pbr74XMmMqoCjs9BQ9nfUdojyes6shuEW1rRgjv8tuLwtoBsusUok7PH5H1Y4XLT9pesjN6R1cDVPa9u5HJ99tB
+    );
   } catch (e) {
     console.error(`Oops, something went wrong: ${e}`);
   }
