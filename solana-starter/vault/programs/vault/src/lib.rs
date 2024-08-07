@@ -10,6 +10,8 @@ pub mod vault {
     use super::*;
 
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
+        // ctx.accounts is pulled from Anchor's Context - it groups them together from the accounts specified in Initialize struct
+        // ctx.bumps is grouped together by Anchor from the bumps in Initialize struct
         ctx.accounts.initialize(&ctx.bumps)?;
 
         Ok(())
@@ -36,6 +38,7 @@ pub mod vault {
 
 #[derive(Accounts)]
 pub struct Initialize<'info> {
+    // declare the accounts that are needed in the instruction - Anchor will pull them from the Context as ctx.accounts
     #[account(mut)]
     pub user: Signer<'info>,
     #[account(
@@ -45,17 +48,23 @@ pub struct Initialize<'info> {
         bump,
         space = VaultState::INIT_SPACE,
     )]
+    // vault_state PDA will store our bumps so we don't have to regenerate them
     pub vault_state: Account<'info, VaultState>,
     #[account(
+        // We don't use `init` here because the account will be initialized when enough lamports are transferred to make it rent-exempt. But our code must ensure proper handling of account state by making it possible to trasfer lamports to it.
         seeds = [b"vault", vault_state.key().as_ref()],
         bump,
     )]
+    // vault PDA will be where lamports will be deposited and withdrawn
     pub vault: SystemAccount<'info>,
+    // system program is required to run the cpi - cross program invocation
     pub system_program: Program<'info, System>,
 }
 
 impl<'info> Initialize<'info> {
+    // We have not defined `InitializeBumps` but Anchor is smart enough to handle it
     pub fn initialize(&mut self, bumps: &InitializeBumps) -> Result<()> {
+        // save the two bumps of the new PDAs to the vault_state PDA
         self.vault_state.vault_bump = bumps.vault;
         self.vault_state.state_bump = bumps.vault_state;
 
@@ -105,7 +114,7 @@ pub struct Withdraw<'info> {
     pub user: Signer<'info>,
     #[account(
         mut,
-        seeds = [b"vault", vault_state.key().as_ref()],
+        seeds = [b"vault", vault_state.key().as_ref()], 
         bump = vault_state.vault_bump,
     )]
     pub vault: SystemAccount<'info>,
@@ -194,7 +203,7 @@ pub struct VaultState {
 }
 
 impl Space for VaultState {
+    // anchor discrimintor requires 8 bytes
+    // each bump is 8 bits = 1 byte
     const INIT_SPACE: usize = 8 + 1 + 1;
 }
-
-// hi
