@@ -21,9 +21,10 @@ pub struct Make<'info> {
         mint::token_program = token_program,
     )]
     mint_b: InterfaceAccount<'info, Mint>,
-    #[account(mut,
+    #[account(
+        mut,
         associated_token::mint = mint_a,
-        associated_token::authority = escrow,
+        associated_token::authority = maker,
         associated_token::token_program = token_program,
     )]
     maker_ata_a: InterfaceAccount<'info, TokenAccount>,
@@ -73,12 +74,12 @@ impl<'info> Make<'info> {
             from: self.maker_ata_a.to_account_info(),
             mint: self.mint_a.to_account_info(),
             to: self.vault.to_account_info(),
-            authority: self.escrow.to_account_info(),
+            authority: self.maker.to_account_info(),
         };
 
         let ctx = CpiContext::new(self.token_program.to_account_info(), accounts);
 
-        transfer_checked(ctx, amount, self.mint_a.decimals);
+        transfer_checked(ctx, amount, self.mint_a.decimals)?;
 
         Ok(())
     }

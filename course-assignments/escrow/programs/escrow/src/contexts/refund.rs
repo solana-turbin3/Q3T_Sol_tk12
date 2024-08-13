@@ -21,7 +21,7 @@ pub struct Refund<'info> {
         init_if_needed,
         payer = maker,
         associated_token::mint = mint_a,
-        associated_token::authority = escrow,
+        associated_token::authority = maker,
         associated_token::token_program = token_program,
     )]
     maker_ata_a: InterfaceAccount<'info, TokenAccount>,
@@ -82,7 +82,7 @@ impl<'info> Refund<'info> {
             &signer_seeds,
         );
 
-        close_account(ctx);
+        close_account(ctx)?;
 
         Ok(())
     }
