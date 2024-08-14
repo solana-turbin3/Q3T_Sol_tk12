@@ -2,11 +2,11 @@ use anchor_lang::prelude::*;
 use anchor_spl::{
     metadata::{
         mpl_token_metadata::instructions::{
-            FreezeDelegatedAccountCpi, FreezeDelegatedAccountCpiAccounts,
+            ThawDelegatedAccountCpi, ThawDelegatedAccountCpiAccounts,
         },
         MasterEditionAccount, Metadata, MetadataAccount,
     },
-    token::{approve, Approve, Mint, Token, TokenAccount},
+    token::{revoke, Mint, Revoke, Token, TokenAccount},
 };
 
 use crate::{
@@ -15,7 +15,7 @@ use crate::{
 };
 
 #[derive(Accounts)]
-pub struct Stake<'info> {
+pub struct Unstake<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
     pub mint: Account<'info, Mint>,
@@ -27,13 +27,11 @@ pub struct Stake<'info> {
     )]
     pub mint_ata: Account<'info, TokenAccount>,
     #[account(
-        // the following is using a pattern required for NFTs expected metaplex
         seeds = [
             b"metadata",
             metadata_program.key().as_ref(),
             mint.key().as_ref()
         ],
-        // this is to override the default behavior of using our own program_id as part of the seeds to create the PDA
         seeds::program = metadata_program.key(),
         constraint = metadata.collection.as_ref().unwrap().key.as_ref() == collection.key().as_ref(),
         constraint = metadata.collection.as_ref().unwrap().verified == true,
@@ -62,32 +60,26 @@ pub struct Stake<'info> {
     #[account(
         init,
         payer = user,
-        seeds = [b"stake", mint.key().as_ref(), config.key().as_ref()],
-        bump,
         space = StakeAccount::INIT_SPACE,
+        seeds = [b"stake".as_ref(), mint.key().as_ref(), config.key().as_ref()],
+        bump,
     )]
     pub stake_account: Account<'info, StakeAccount>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
 }
 
-impl<'info> Stake<'info> {
-    pub fn stake(&mut self, bumps: &StakeBumps) -> Result<()> {
+impl<'info> Unstake<'info> {
+    pub fn unstake(&mut self) -> Result<()> {
+        let time_elapsed =
+            ((Clock::get()?.unix_timestamp - self.stake_account.last_updated) / 86400) as u32;
+
         require!(
-            self.user_account.amount_staked < self.config.max_stake,
-            ErrorCode::MaxStake
+            time_elapsed >= self.config.freeze_period,
+            ErrorCode::CantUnstakeYet
         );
 
-        let cpi_program = self.token_program.to_account_info();
-        let cpi_accounts = Approve {
-            to: self.mint_ata.to_account_info(),
-            delegate: self.stake_account.to_account_info(),
-            authority: self.user.to_account_info(),
-        };
-
-        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-
-        approve(cpi_ctx, 1)?;
+        self.user_account.points += time_elapsed as u32 * self.config.points_per_stake as u32;
 
         let delegate = &self.stake_account.to_account_info();
         let token_account = &self.mint_ata.to_account_info();
@@ -96,26 +88,29 @@ impl<'info> Stake<'info> {
         let token_program = &self.token_program.to_account_info();
         let metadata_program = &self.metadata_program.to_account_info();
 
-        FreezeDelegatedAccountCpi::new(
+        ThawDelegatedAccountCpi::new(
             metadata_program,
-            FreezeDelegatedAccountCpiAccounts {
+            ThawDelegatedAccountCpiAccounts {
                 delegate,
                 token_account,
                 edition,
                 mint,
                 token_program,
             },
-        )
-        .invoke()?;
+        );
 
-        self.stake_account.set_inner(StakeAccount {
-            owner: self.user.key(),
-            mint: self.mint.key(),
-            last_updated: Clock::get()?.unix_timestamp,
-            bump: bumps.stake_account,
-        });
+        let cpi_program = self.token_program.to_account_info();
 
-        self.user_account.amount_staked += 1;
+        let cpi_accounts = Revoke {
+            source: self.mint_ata.to_account_info(),
+            authority: self.stake_account.to_account_info(),
+        };
+
+        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+
+        revoke(cpi_ctx)?;
+
+        self.user_account.amount_staked -= 1;
 
         Ok(())
     }

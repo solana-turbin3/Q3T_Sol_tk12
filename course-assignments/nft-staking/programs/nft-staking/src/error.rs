@@ -5,4 +5,6 @@ use anchor_lang::prelude::*;
 pub enum ErrorCode {
     #[msg("Max stake reached")]
     MaxStake,
+    #[msg("Cannot unstake yet")]
+    CantUnstakeYet,
 }
