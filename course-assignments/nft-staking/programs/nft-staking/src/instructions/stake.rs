@@ -35,9 +35,9 @@ pub struct Stake<'info> {
         ],
         // this is to override the default behavior of using our own program_id as part of the seeds to create the PDA
         seeds::program = metadata_program.key(),
+        bump,
         constraint = metadata.collection.as_ref().unwrap().key.as_ref() == collection.key().as_ref(),
         constraint = metadata.collection.as_ref().unwrap().verified == true,
-        bump
     )]
     pub metadata: Account<'info, MetadataAccount>,
     #[account(
@@ -51,24 +51,24 @@ pub struct Stake<'info> {
         bump
     )]
     pub edition: Account<'info, MasterEditionAccount>,
-    pub metadata_program: Program<'info, Metadata>,
     pub config: Account<'info, StakeConfig>,
-    #[account(
-        mut,
-        seeds = [b"user", user.key().as_ref()],
-        bump = user_account.bump
-    )]
-    pub user_account: Account<'info, UserAccount>,
     #[account(
         init,
         payer = user,
-        seeds = [b"stake", mint.key().as_ref(), config.key().as_ref()],
-        bump,
         space = StakeAccount::INIT_SPACE,
+        seeds = [b"stake".as_ref(), mint.key().as_ref(), config.key().as_ref()],
+        bump,
     )]
     pub stake_account: Account<'info, StakeAccount>,
+    #[account(
+        mut,
+        seeds = [b"user".as_ref(), user.key().as_ref()],
+        bump = user_account.bump,
+    )]
+    pub user_account: Account<'info, UserAccount>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
+    pub metadata_program: Program<'info, Metadata>,
 }
 
 impl<'info> Stake<'info> {
@@ -77,6 +77,13 @@ impl<'info> Stake<'info> {
             self.user_account.amount_staked < self.config.max_stake,
             ErrorCode::MaxStake
         );
+
+        self.stake_account.set_inner(StakeAccount {
+            owner: self.user.key(),
+            mint: self.mint.key(),
+            last_updated: Clock::get()?.unix_timestamp,
+            bump: bumps.stake_account,
+        });
 
         let cpi_program = self.token_program.to_account_info();
         let cpi_accounts = Approve {
@@ -88,6 +95,14 @@ impl<'info> Stake<'info> {
         let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
 
         approve(cpi_ctx, 1)?;
+
+        let seeds = &[
+            b"stake",
+            self.mint.to_account_info().key.as_ref(),
+            self.config.to_account_info().key.as_ref(),
+            &[self.stake_account.bump],
+        ];
+        let signer_seeds = &[&seeds[..]];
 
         let delegate = &self.stake_account.to_account_info();
         let token_account = &self.mint_ata.to_account_info();
@@ -106,14 +121,7 @@ impl<'info> Stake<'info> {
                 token_program,
             },
         )
-        .invoke()?;
-
-        self.stake_account.set_inner(StakeAccount {
-            owner: self.user.key(),
-            mint: self.mint.key(),
-            last_updated: Clock::get()?.unix_timestamp,
-            bump: bumps.stake_account,
-        });
+        .invoke_signed(signer_seeds)?;
 
         self.user_account.amount_staked += 1;
 
