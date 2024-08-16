@@ -11,3 +11,5 @@
 2. **wba-airdrop**: The prerequisite requirement to qualify for the course. Writing basic scripts in TypeScript for Solana, such as generating a wallet, airdropping to that wallet, and transferring native and SPL tokens.
 
 3. **wba-registration-rust**: Implementing Rust code to perform the same functionality as the prerequisites described above in item 2.
+
+4. **capstone**: The project I built using the skills I learned over the duration of the course.
