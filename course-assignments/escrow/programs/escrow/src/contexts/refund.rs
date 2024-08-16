@@ -18,8 +18,7 @@ pub struct Refund<'info> {
     )]
     mint_a: InterfaceAccount<'info, Mint>,
     #[account(
-        init_if_needed,
-        payer = maker,
+        mut,
         associated_token::mint = mint_a,
         associated_token::authority = maker,
         associated_token::token_program = token_program,
@@ -28,6 +27,8 @@ pub struct Refund<'info> {
     #[account(
         mut,
         close = maker,
+        has_one = mint_a,
+        has_one = maker,
         seeds = [b"escrow",maker.key().as_ref(), escrow.seed.to_le_bytes().as_ref()],
         bump = escrow.bump
     )]
@@ -46,15 +47,15 @@ pub struct Refund<'info> {
 
 impl<'info> Refund<'info> {
     pub fn withdraw_and_close(&mut self) -> Result<()> {
-        let seed = self.escrow.seed.to_be_bytes();
-        let bump = [self.escrow.bump];
+        // Create the signer seeds for the escrow account in order to sign on behalf of the vault.
         let signer_seeds: [&[&[u8]]; 1] = [&[
             b"escrow",
             self.maker.to_account_info().key.as_ref(),
-            seed.as_ref(),
-            &bump[..],
+            &self.escrow.seed.to_le_bytes()[..],
+            &[self.escrow.bump],
         ]];
 
+        // Create a TransferChecked instruction to transfer the maker's funds from the vault to the maker's ATA.
         let accounts = TransferChecked {
             from: self.vault.to_account_info(),
             mint: self.mint_a.to_account_info(),
@@ -62,14 +63,17 @@ impl<'info> Refund<'info> {
             authority: self.escrow.to_account_info(),
         };
 
+        // Create a CPI context with signer for the transfer instruction.
         let ctx = CpiContext::new_with_signer(
             self.token_program.to_account_info(),
             accounts,
             &signer_seeds,
         );
 
+        // Execute the transfer_checked instruction.
         transfer_checked(ctx, self.vault.amount, self.mint_a.decimals)?;
 
+        // Create a CloseAccount instruction to close the vault account.
         let accounts = CloseAccount {
             account: self.vault.to_account_info(),
             destination: self.maker.to_account_info(),

@@ -70,6 +70,7 @@ impl<'info> Make<'info> {
     }
 
     pub fn deposit_to_vault(&mut self, amount: u64) -> Result<()> {
+        // Create a TransferChecked instruction to deposit the maker's funds into the vault.
         let accounts = TransferChecked {
             from: self.maker_ata_a.to_account_info(),
             mint: self.mint_a.to_account_info(),
@@ -77,8 +78,10 @@ impl<'info> Make<'info> {
             authority: self.maker.to_account_info(),
         };
 
+        // Create a CPI context for the transfer instruction.
         let ctx = CpiContext::new(self.token_program.to_account_info(), accounts);
 
+        // Execute the transfer_checked instruction.
         transfer_checked(ctx, amount, self.mint_a.decimals)?;
 
         Ok(())

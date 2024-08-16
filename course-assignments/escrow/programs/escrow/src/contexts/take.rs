@@ -15,13 +15,7 @@ pub struct Take<'info> {
     taker: Signer<'info>,
     #[account(mut)]
     maker: SystemAccount<'info>,
-    #[account(
-        mint::token_program = token_program,
-    )]
     mint_a: InterfaceAccount<'info, Mint>,
-    #[account(
-        mint::token_program = token_program,
-    )]
     mint_b: InterfaceAccount<'info, Mint>,
     #[account(
         init_if_needed,
@@ -30,14 +24,14 @@ pub struct Take<'info> {
         associated_token::authority = taker,
         associated_token::token_program = token_program,
     )]
-    taker_ata_a: InterfaceAccount<'info, TokenAccount>,
+    taker_ata_a: Box<InterfaceAccount<'info, TokenAccount>>,
     #[account(
         mut,
         associated_token::mint = mint_b,
         associated_token::authority = taker,
         associated_token::token_program = token_program,
     )]
-    taker_ata_b: InterfaceAccount<'info, TokenAccount>,
+    taker_ata_b: Box<InterfaceAccount<'info, TokenAccount>>,
     #[account(
         init_if_needed,
         payer = taker,
@@ -45,12 +39,14 @@ pub struct Take<'info> {
         associated_token::authority = maker,
         associated_token::token_program = token_program,
     )]
-    maker_ata_b: InterfaceAccount<'info, TokenAccount>,
+    maker_ata_b: Box<InterfaceAccount<'info, TokenAccount>>,
     #[account(
         mut,
-        // paying back the taker makes it more fair - more evenly splitting tx fees for both parties
-        close = taker,
-        seeds = [b"escrow",maker.key().as_ref(), escrow.seed.to_le_bytes().as_ref()],
+        close = maker,
+        has_one = maker,
+        has_one = mint_a,
+        has_one = mint_b,
+        seeds = [b"escrow", maker.key().as_ref(), escrow.seed.to_le_bytes().as_ref()],
         bump = escrow.bump
     )]
     escrow: Account<'info, Escrow>,
@@ -61,6 +57,7 @@ pub struct Take<'info> {
         associated_token::token_program = token_program,
     )]
     vault: InterfaceAccount<'info, TokenAccount>,
+
     associated_token_program: Program<'info, AssociatedToken>,
     token_program: Interface<'info, TokenInterface>,
     system_program: Program<'info, System>,
@@ -68,6 +65,8 @@ pub struct Take<'info> {
 
 impl<'info> Take<'info> {
     pub fn transfer_to_maker(&mut self) -> Result<()> {
+        println!("just starting the take!!!!");
+        // Create a TransferChecked instruction to transfer the taker's funds (token B) from the taker's ATA to the maker's ATA.
         let accounts = TransferChecked {
             from: self.taker_ata_b.to_account_info(),
             mint: self.mint_b.to_account_info(),
@@ -81,19 +80,18 @@ impl<'info> Take<'info> {
     }
 
     pub fn withdraw_and_close(&mut self) -> Result<()> {
-        let seed = self.escrow.seed.to_be_bytes();
-        let bump = [self.escrow.bump];
+        // Create the signer seeds for the escrow account in order to sign on behalf of the vault.
         let signer_seeds: [&[&[u8]]; 1] = [&[
             b"escrow",
             self.maker.to_account_info().key.as_ref(),
-            seed.as_ref(),
-            &bump[..],
+            &self.escrow.seed.to_le_bytes()[..],
+            &[self.escrow.bump],
         ]];
 
+        // Create a TransferChecked instruction to transfer the maker's funds (token A) from the vault to the taker's ATA.
         let accounts = TransferChecked {
             from: self.vault.to_account_info(),
             mint: self.mint_a.to_account_info(),
-            // different from refund - where we send to maker
             to: self.taker_ata_a.to_account_info(),
             authority: self.escrow.to_account_info(),
         };
@@ -104,8 +102,10 @@ impl<'info> Take<'info> {
             &signer_seeds,
         );
 
+        // Execute the transfer_checked instruction.
         transfer_checked(ctx, self.vault.amount, self.mint_a.decimals)?;
 
+        // Create a CloseAccount instruction to close the vault account.
         let accounts = CloseAccount {
             account: self.vault.to_account_info(),
             // different from refund - where we send to maker
