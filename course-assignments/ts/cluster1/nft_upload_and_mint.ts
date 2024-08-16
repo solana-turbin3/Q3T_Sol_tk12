@@ -26,6 +26,9 @@ umi.use(irysUploader());
 umi.use(signerIdentity(signer));
 umi.use(mplTokenMetadata());
 
+const name = 'N8HughsWBA';
+const symbol = 'N8';
+
 const createNft = async () => {
   // 1. load image
   const imageFile = await readFile(
@@ -44,8 +47,8 @@ const createNft = async () => {
 
   // 4. add metada
   const metadata = {
-    name: 'N8HughsWBA',
-    symbol: 'N8',
+    name: name,
+    symbol: symbol,
     description: 'This is an NFT of WBA cofounder Nate Hughs',
     image,
     // external_url: 'https://example.com',
@@ -80,7 +83,7 @@ const createNft = async () => {
   const tx = await createProgrammableNft(umi, {
     mint: nftSigner,
     sellerFeeBasisPoints: percentAmount(5.5),
-    name: 'My NFT',
+    name: name,
     uri: metadataUri,
     ruleSet: ruleset,
   }).sendAndConfirm(umi);
