@@ -16,7 +16,7 @@ const config: Config = {
     colors: {
       lightPurple: '#AA76FF',
       darkPurple: '#680CFF',
-      black: '#000000',
+      black: '#1A1A1A ',
       white: '#FFFFFF',
       gray: 'rbga(189,186,186, 0.75)',
     },
@@ -28,7 +28,11 @@ const config: Config = {
       none: '0',
       sm: '.125rem',
       DEFAULT: '.25rem',
+      md: '.375rem',
       lg: '.5rem',
+      xl: '1rem',
+      '2xl': '1.5rem',
+      '3xl': '2rem',
       full: '9999px',
     },
     spacing: {
@@ -67,10 +71,10 @@ const config: Config = {
       colors: {
         light: {
           background: '#FFFFFF',
-          foreground: '#000000',
+          foreground: '#1A1A1A ',
         },
         dark: {
-          background: '#000000',
+          background: '#1A1A1A ',
           foreground: '#FFFFFF',
         },
       },
