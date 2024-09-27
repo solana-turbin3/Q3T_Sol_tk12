@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button, Row, Column } from '@/components';
 import { FaChevronUp, FaChevronDown } from 'react-icons/fa';
+import { useTranslation } from 'react-i18next';
 
 const MoreInfo = ({
   isOpen,
@@ -9,6 +10,7 @@ const MoreInfo = ({
   isOpen: boolean;
   toggleMoreInfo: () => void;
 }) => {
+  const { t } = useTranslation();
   return (
     <Button
       onClick={toggleMoreInfo}
@@ -17,7 +19,7 @@ const MoreInfo = ({
       <Column className='w-full'>
         <Row className='w-full relative'>
           <span className='flex-grow'>
-            {isOpen ? 'Gimme less info' : 'Gimme more info'}
+            {isOpen ? t('Gimme less info') : t('Gimme more info')}
           </span>
           {isOpen ? (
             <FaChevronUp size={18} className='hidden sm:block' />
@@ -30,34 +32,32 @@ const MoreInfo = ({
           style={{ maxHeight: isOpen ? '1000px' : '0px' }}
         >
           <p className='text-sm text-left'>
-            twizzin [twi' z' in] verb, informal
+            {`twizzin [twi' z' in] ${t('verb, informal')}`}
             <br />
-            1. To be in a state of heightened mental acuity and knowledge
-            recall, particularly while answering trivia questions.
+            {`1. ${t(
+              'To be in a state of heightened mental acuity and knowledge recall, particularly while answering trivia questions.'
+            )}`}
             <br />
-            2. To perform exceptionally well in a quiz or trivia competition, as
-            if possessing expert-level knowledge or magical, wizzard-like
-            abilities.
-            <br />
-            <br />
-            Compete with other players at the same time, answering the same set
-            of multiple choice questions. Follow these simple steps to play:
+            {`2. ${t(
+              'To perform exceptionally well in a quiz or trivia competition, as if possessing expert-level knowledge or magical, wizzard-like abilities.'
+            )}`}
             <br />
             <br />
-            Step 1: Within 10 minutes of start time, connect your Solana wallet.
-            <br />
-            Step 2: Enter a username for the game session and pay the 0.1 SOL
-            entry fee.
-            <br />
-            Step 3: At the start time, answer the questions as fast and
-            accurately as you can.
-            <br />
-            Step 4: When you are done, click submit.
-            <br />
-            Step 4: See how you stacked up against the other twizzers.
-            <br />
-            Winners are selected based on accuracy and speed. The winners will
-            split what's in the pool, minus a small fee for the creators.
+            {t(
+              `Twizzin is an interactive Web3 trivia game built on the Solana blockchain, where players compete against each other in real time.`
+            )}
+            {t(
+              `To join a game, players must pay an entry fee in SOL tokens, which contributes to the prize pool.`
+            )}
+            {t(
+              `Each round, everyone answers the same set of multiple-choice questions, earning points based on speed and accuracy.`
+            )}
+            {t(
+              `The top performers on the leaderboard are rewarded with a share of the prize pool.`
+            )}
+            {t(
+              `Each player is also rewarded with experience points for participating in the game.`
+            )}
           </p>
         </div>
       </Column>
