@@ -2,6 +2,8 @@
 
 ### program_id: ALQmwhCJVQk3rDu85aVfKTmujDax8uTdZ3HRKnjPVPxg
 
+### [slide deck](https://docs.google.com/presentation/d/1fu9iprdbYSv58PldUaJNDsWcXdELgebAiv4nPmF9pMI/edit?usp=sharing)
+
 ## Description
 
 Twizzin is a game for trivia wizzes. It's a live multiplayer game where players can join by paying a small fee and play against each other to win SOL. Users can create a game and invite their friends to join.
